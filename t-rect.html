@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+div#game
+{
+	width: 1000px;
+	margin: 0px auto;
+}
+
+body
+{
+    background: rgb(200,190,255);
+    margin: auto;
+}
+
+canvas 
+{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    border: 10px outset blue;
+    background-color: white;
+    height: 500px;
+    width: 1000px;
+	margin: 0px auto;
+}
+
+.button
+{
+position: absolute;
+top: 85%;
+left: 40%;
+background-color: yellow;
+border: 5px inset rgb(153,0,204);
+color: black;
+padding: 10px;
+text-align: center;
+font-size: 15px;
+margin: 3px;
+cursor: pointer;
+}
+
+.button1
+{
+position: absolute;
+top: 85%;
+left: 60%;
+background-color: yellow;
+border: 5px inset rgb(153,0,204);
+color: black;
+padding: 10px;
+text-align: center;
+font-size: 15px;
+margin: 3px;
+cursor: pointer;
+}
+
+.button2
+{
+position: absolute;
+top: 85%;
+left: 49%;
+background-color: yellow;
+border: 5px inset rgb(153,0,204);
+color: black;
+padding: 10px;
+text-align: center;
+font-size: 15px;
+margin: 3px;
+cursor: pointer;
+}
+
+h1
+{
+color: magenta;
+font-family: "cambria";
+font-size: 100px;
+text-align: left ;
+}
+
+h3
+{
+color: black;
+font-family: "cambria";
+font-size: 20px;
+text-align: center;
+margin-top: 15%;
+}
+
+p
+{
+color: black;
+font-family: "cambria";
+font-size: 80px;
+text-align: left ;
+}
+
+@media screen and (max-width:999px)
+{
+#game
+{
+width:100%;
+}
+
+#canvas
+{
+width:100%;
+}
+}
+</style>
+</head>
+
+<body>
+
+<audio id="audio" controls="controls"  loop="infinite">
+	<source src="game.mp3" type="audio/mpeg" >
+</audio>
+
+<audio id="audio1" controls="controls"  loop="1">
+	<source src="out.mp3" type="audio/mpeg" >
+</audio>
+
+<h1>SCORE:</h1>
+<p id="txt">0</p>
+
+
+<body onload="startGame()">
+<div id="game">
+<script>
+
+var token;
+var blocks = [];
+var c=0;
+var t;
+var r;
+var p;
+var u;
+var aud= document.getElementById("audio");
+var aud1= document.getElementById("audio1");
+
+aud.autoplay=true;
+aud.load();
+
+function play()
+{
+	aud.play();
+	aud1.pause();
+}
+
+function pause()
+{
+	aud.pause();
+	aud1.play();
+}
+
+function reset()
+{
+	location.reload();
+}
+
+
+function startGame() 
+{
+    token = new component(20, 20, "red", 10, 120);
+    token.gravity = 0.05;
+    u=10;
+    timedCount();
+    play();
+    game.start();
+}
+
+function respawn() 
+{
+    token = new component(20, 20, "red", 10, 120);
+    token.gravity = 0.05;
+    timedCount();
+    game.start();
+}
+
+var game = 
+{
+	canvas : 
+		document.createElement("canvas"),
+    	start : 	
+		function() 
+		{
+        			this.canvas.width = 480;
+        			this.canvas.height = 270;
+        			this.context = this.canvas.getContext("2d");
+        			document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        			this.frameNo = 0;
+        			this.interval = setInterval(updateGameArea, u);
+        		},
+    	clear : 
+		function() 
+		{
+        			this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    		}
+}
+
+
+function component(width,height, color, x, y, type) 
+{
+	this.type = type;
+    	this.width = width;
+    	this.height = height;
+    	this.speedY = 0;    
+   	this.x = x;
+   	this.y = y;
+    	this.gravity = 0;
+    	this.gravitySpeed = 0;
+    	
+	this.update = 
+		function() 
+		{
+        			ctx = game.context;
+        			
+            				ctx.fillStyle = color;
+           	 			ctx.fillRect(this.x, this.y, this.width, this.height);
+        			
+    		}
+	
+    	
+	this.newPos = 
+		function() 
+		{
+        			this.gravitySpeed += this.gravity;
+        			this.y += this.speedY + this.gravitySpeed;
+        			this.hitBottom();
+			this.hitRoof();
+		}	
+    
+	this.hitBottom = 
+		function() 
+		{
+        			var rockbottom = game.canvas.height - this.height;
+        			if (this.y > rockbottom) 
+			{
+            				this.y = rockbottom;
+            				this.gravitySpeed = 0;
+        			}
+    		}
+
+	this.hitRoof = 
+		function() 
+		{
+        			var roof = 0 ;
+        			if (this.y < roof) 
+			{
+            				this.y = roof;
+            				this.gravitySpeed = 0;
+			}
+    		}
+    
+	this.crashed = 
+		function(otherobj) 	
+		{
+        			var myleft = this.x;
+        			var myright = this.x + (this.width);
+        			var mytop = this.y;
+        			var mybottom = this.y + (this.height);
+        			var otherleft = otherobj.x;
+        			var otherright = otherobj.x + (otherobj.width);
+        			var othertop = otherobj.y;
+        			var otherbottom = otherobj.y + (otherobj.height);
+        			var crash = true;
+			if ((mybottom < othertop) || (myright < otherleft) || (myleft > otherright)) 	
+			{
+            				crash = false;
+            			}
+        			return crash;
+    		}
+}
+
+
+function updateGameArea() 	
+{
+	var x, height, width;
+	var color=["red", "blue", "green", "black", "magenta", "yellow", "gray", "violet", "pink", "orange"];
+	var z;
+   	for (i = 0; i < blocks.length; i += 1) 
+	{
+        		if (token.crashed(blocks[i])) 
+       		{	
+			stopCount();
+			pause();
+            			return;
+        		} 
+    	}
+    	
+	game.clear();
+    	game.frameNo += 1;
+    	if (game.frameNo == 1 || everyinterval(150)) 
+	{
+        		x = game.canvas.width;
+		r=Math.random();
+		p=Math.random()*10;
+		z=Math.floor((Math.random() *10));
+		if(r>0.15 && r<0.25)
+		{
+			height= r*1000;
+		}
+		else
+		{
+			height=200;
+		}
+	
+		if(p>2)
+		{
+			width=p;
+		}
+		else
+		{
+			width=5;
+		}
+
+        		blocks.push(new component(width, x , color[z], x, height));
+    	}
+    	
+	for (i = 0; i < blocks.length; i += 1) 
+	{
+        		blocks[i].x += -1;
+        		blocks[i].update();
+   	}
+    	token.newPos();
+    	token.update();
+}
+
+
+function everyinterval(n)
+{
+	if ((game.frameNo / n) % 1 == 0) 
+	{
+		return true;
+	}
+    	return false;
+}
+
+
+function jump(n) 
+{
+    	token.gravity = n;
+}
+
+
+function stopCount()
+{
+	clearTimeout(t);
+}
+
+function timedCount()
+{
+	document.getElementById('txt').innerHTML=c;
+	c=c+1;
+	t=setTimeout("timedCount()",100);
+}
+
+
+</script>
+</div>
+<br>
+<button type="button" class="button" onmousedown="jump(-0.3)" onmouseup="jump(0.1)">JUMP</button>
+<button type="button" class="button1" onclick="reset()">RESET</button>
+<button type="button" class="button2" onclick="respawn()">RESPAWN</button>
+<h3> Respawning brings the token to the position where you crashed, but increases the speed unbelievably!!<h3>
+</body>
+</html>
